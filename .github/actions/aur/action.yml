@@ -1,0 +1,18 @@
+name: "AUR package builder"
+description: ""
+author: "brw"
+branding:
+  icon: "package"
+  color: "blue"
+
+inputs:
+  pkgname:
+    description: ""
+    required: true
+
+runs:
+  using: docker
+  image: "docker://ghcr.io/jamiemagee/aur-packages/aur-action:latest"
+  args:
+    - ${{ inputs.action }}
+    - ${{ inputs.pkgname }}
