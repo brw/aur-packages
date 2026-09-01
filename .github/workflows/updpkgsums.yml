@@ -7,33 +7,48 @@ on:
       - synchronize
     branches:
       - main
+    paths:
+      - '*/PKGBUILD'
 
 jobs:
-  updpkgsums:
+  find-packages:
+    name: Find updated packages
     runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.find-packages.outputs.packages }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          ref: ${{ github.ref }}
 
-      - name: Find updated package
-        id: find-package
+      - name: Find updated packages
+        id: find-packages
         run: |
           #!/usr/bin/env bash
           set -euxo pipefail
 
-          echo "PKGBUILD=$(git diff --name-only origin/main origin/${GITHUB_HEAD_REF} "*PKGBUILD" | head -1 | xargs dirname)" >> $GITHUB_OUTPUT
+          echo "packages=$(git diff --name-only origin/main origin/${GITHUB_HEAD_REF} "*PKGBUILD" | xargs dirname | jq -Rnc '[inputs]')" >> $GITHUB_OUTPUT
+
+  updpkgsums:
+    name: Update package hashes
+    runs-on: ubuntu-latest
+    needs: find-packages
+    strategy:
+      matrix:
+        package: ${{ fromJSON(needs.find-packages.outputs.packages) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Validate package
-        if: ${{ steps.find-package.outputs.PKGBUILD != '' }}
         uses: ./.github/actions/aur
         with:
-          pkgname: ${{ steps.find-package.outputs.PKGBUILD }}
+          pkgname: ${{ matrix.package }}
+
 
       - name: Commit
-        if: ${{ steps.find-package.outputs.PKGBUILD != '' }}
         uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
         with:
           file_pattern: '*/PKGBUILD */.SRCINFO'
