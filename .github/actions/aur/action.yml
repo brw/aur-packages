@@ -12,7 +12,7 @@ inputs:
 
 runs:
   using: docker
-  image: "docker://ghcr.io/jamiemagee/aur-packages/aur-action:latest"
+  image: "docker://ghcr.io/brw/aur-packages/aur-action:latest"
   args:
     - ${{ inputs.action }}
     - ${{ inputs.pkgname }}
