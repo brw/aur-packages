@@ -27,7 +27,7 @@ git diff PKGBUILD
 echo "::endgroup::"
 
 echo "::group::Resetting pkgrel on version bump"
-old_pkgver=$(git show HEAD^:PKGBUILD 2>/dev/null | grep -oP '^pkgver=\K.*' || true)
+old_pkgver=$(git show HEAD^:"$INPUT_PKGNAME"/PKGBUILD 2>/dev/null | grep -oP '^pkgver=\K.*' || true)
 new_pkgver=$(grep -oP '^pkgver=\K.*' PKGBUILD || true)
 echo "old pkgver: '${old_pkgver}'"
 echo "new pkgver: '${new_pkgver}'"
@@ -40,11 +40,16 @@ echo "::endgroup::"
 
 echo "::group::Installing depends using paru"
 source PKGBUILD
-paru -Syu --removemake --needed --noconfirm "${depends[@]}" "${makedepends[@]}"
+paru -Syu --removemake --needed --noconfirm "${depends[@]:-}" "${makedepends[@]:-}"
 echo "::endgroup::"
 
 echo "::group::Running makepkg"
 makepkg
+echo "::endgroup::"
+
+echo "::group::Installing built package"
+sudo pacman -U --noconfirm ./*.pkg.tar.zst
+goat --help >/dev/null
 echo "::endgroup::"
 
 echo "::group::Generating new .SRCINFO based on PKGBUILD"
