@@ -28,7 +28,13 @@ jobs:
           #!/usr/bin/env bash
           set -euxo pipefail
 
-          echo "packages=$(git diff --name-only origin/main origin/${GITHUB_HEAD_REF} "*PKGBUILD" | xargs dirname | jq -Rnc '[inputs]')" >> $GITHUB_OUTPUT
+          changed=$(git diff --name-only origin/main "origin/${GITHUB_HEAD_REF}" "*PKGBUILD" | xargs -r dirname)
+          if [ -z "$changed" ]; then
+            echo "::error::PKGBUILD has no changes with origin/main, but the workflow was triggered by a PKGBUILD change"
+            exit 1
+          fi
+
+          echo "packages=$(echo "$changed" | jq -Rnc '[inputs]')" >> "$GITHUB_OUTPUT"
 
   updpkgsums:
     name: Update package hashes
