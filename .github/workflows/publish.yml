@@ -17,15 +17,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Find updated packages
         id: find-packages
+        env:
+          BASE_SHA: ${{ github.event.before }}
         run: |
           #!/usr/bin/env bash
           set -euxo pipefail
 
-          changed=$(git diff --name-only HEAD HEAD~1 -- "*PKGBUILD" "*/.SRCINFO" | xargs -r dirname | sort -u)
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            echo "::error::no previous state for this branch, so the changed packages cannot be determined"
+            exit 1
+          fi
+
+          changed=$(git diff --name-only "$BASE_SHA" HEAD -- "*PKGBUILD" "*/.SRCINFO" | xargs -r dirname | sort -u)
           echo "packages=$(echo "$changed" | jq -Rnc '[inputs]')" >> "$GITHUB_OUTPUT"
 
   publish:
@@ -39,6 +46,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Build, validate and regenerate .SRCINFO
+        uses: ./.github/actions/pkgbuild
+        with:
+          pkgname: ${{ matrix.package }}
+          image: docker.io/library/archlinux:base-devel
+          update_metadata: true
+          base_sha: ${{ github.event.before }}
+
+      - name: Commit regenerated .SRCINFO
+        uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
+        with:
+          file_pattern: '*/PKGBUILD */.SRCINFO'
 
       - name: Publish package
         uses: KSXGitHub/github-actions-deploy-aur@084b0d9b15415bf9cdb65d44dad1efe37a354050 # v4.2.0

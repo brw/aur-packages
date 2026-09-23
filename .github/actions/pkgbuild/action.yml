@@ -1,0 +1,51 @@
+name: "AUR package builder"
+description: "Builds and validates a PKGBUILD"
+author: "brw"
+branding:
+  icon: "package"
+  color: "blue"
+
+inputs:
+  pkgname:
+    description: "Name of the package directory"
+    required: true
+  image:
+    description: "Arch Linux container image to use"
+    required: true
+  update_metadata:
+    description: "Run updpkgsums, reset pkgrel on a version bump, regenerate .SRCINFO and commit."
+    required: false
+    default: "false"
+  base_sha:
+    description: "SHA of the commit before this change, to check which packages to build. Use github.event.before for pushes and github.event.pull_request.base.sha for pull requests."
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Build and validate
+      shell: bash
+      env:
+        PKGNAME: ${{ inputs.pkgname }}
+        IMAGE: ${{ inputs.image }}
+        UPDATE_METADATA: ${{ inputs.update_metadata }}
+        BASE_SHA: ${{ inputs.base_sha }}
+      run: |
+        set -euo pipefail
+
+        mount=ro
+        if [ "$UPDATE_METADATA" = true ]; then
+          mount=rw
+        fi
+
+        docker run --rm \
+          --volume "$GITHUB_WORKSPACE:/workspace:$mount" \
+          --volume "${{ github.action_path }}:/action:ro" \
+          --env "PKGNAME=$PKGNAME" \
+          --env "UPDATE_METADATA=$UPDATE_METADATA" \
+          --env "BASE_SHA=$BASE_SHA" \
+          --env "HOST_UID=$(id -u)" \
+          --env "HOST_GID=$(id -g)" \
+          "$IMAGE" \
+          bash /action/build.sh

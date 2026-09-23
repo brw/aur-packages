@@ -1,4 +1,4 @@
-name: updpkgsums
+name: validate
 
 on:
   pull_request:
@@ -36,24 +36,41 @@ jobs:
 
           echo "packages=$(echo "$changed" | jq -Rnc '[inputs]')" >> "$GITHUB_OUTPUT"
 
-  updpkgsums:
-    name: Update package hashes
-    runs-on: ubuntu-latest
+  validate:
+    name: ${{ matrix.package }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     needs: find-packages
     strategy:
+      fail-fast: false
       matrix:
         package: ${{ fromJSON(needs.find-packages.outputs.packages) }}
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+            image: docker.io/library/archlinux:base-devel
+            update_metadata: true
+
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            image: docker.io/menci/archlinuxarm:base-devel
+            update_metadata: false
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
-      - name: Validate package
-        uses: ./.github/actions/aur
+      - name: Build and validate
+        uses: ./.github/actions/pkgbuild
         with:
           pkgname: ${{ matrix.package }}
+          image: ${{ matrix.image }}
+          update_metadata: ${{ matrix.update_metadata }}
+          base_sha: ${{ github.event.pull_request.base.sha }}
 
-      - name: Commit
+      - name: Commit regenerated metadata
+        if: matrix.update_metadata
         uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
         with:
           file_pattern: '*/PKGBUILD */.SRCINFO'
