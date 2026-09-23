@@ -14,5 +14,4 @@ runs:
   using: docker
   image: "docker://ghcr.io/brw/aur-packages/aur-action:latest"
   args:
-    - ${{ inputs.action }}
     - ${{ inputs.pkgname }}
