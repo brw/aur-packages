@@ -32,6 +32,11 @@ build() {
 	go build -ldflags "-compressdwarf=false -linkmode external" .
 }
 
+check() {
+	cd "goat" || exit 1
+	./goat --help >/dev/null
+}
+
 package() {
 	cd "goat" || exit 1
 	install -Dm755 goat "$pkgdir/usr/bin/goat"
