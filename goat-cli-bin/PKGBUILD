@@ -8,7 +8,6 @@ arch=('x86_64')
 url="https://github.com/bluesky-social/goat"
 license=('MIT')
 depends=('glibc')
-makedepends=('go')
 conflicts=("${pkgname%-bin}")
 provides=("${pkgname%-bin}")
 options=('!debug')
