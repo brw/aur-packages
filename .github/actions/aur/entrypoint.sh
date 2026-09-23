@@ -26,6 +26,18 @@ updpkgsums
 git diff PKGBUILD
 echo "::endgroup::"
 
+echo "::group::Resetting pkgrel on version bump"
+old_pkgver=$(git show HEAD^:PKGBUILD 2>/dev/null | grep -oP '^pkgver=\K.*' || true)
+new_pkgver=$(grep -oP '^pkgver=\K.*' PKGBUILD || true)
+echo "old pkgver: '${old_pkgver}'"
+echo "new pkgver: '${new_pkgver}'"
+if [ -n "$old_pkgver" ] && [ -n "$new_pkgver" ] && [ "$old_pkgver" != "$new_pkgver" ]; then
+  echo "pkgver changed, resetting pkgrel to 1"
+  sed -i 's/^pkgrel=.*/pkgrel=1/' PKGBUILD
+fi
+git diff PKGBUILD
+echo "::endgroup::"
+
 echo "::group::Installing depends using paru"
 source PKGBUILD
 paru -Syu --removemake --needed --noconfirm "${depends[@]}" "${makedepends[@]}"
