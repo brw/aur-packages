@@ -25,7 +25,8 @@ jobs:
           #!/usr/bin/env bash
           set -euxo pipefail
 
-          echo "packages=$(git diff --name-only HEAD HEAD~1 "*/.SRCINFO" | xargs dirname | jq -Rnc '[inputs]')" >> $GITHUB_OUTPUT
+          changed=$(git diff --name-only HEAD HEAD~1 -- "*PKGBUILD" "*/.SRCINFO" | xargs -r dirname | sort -u)
+          echo "packages=$(echo "$changed" | jq -Rnc '[inputs]')" >> "$GITHUB_OUTPUT"
 
   publish:
     name: Publish package
