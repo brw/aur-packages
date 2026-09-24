@@ -73,6 +73,12 @@ if [ "$UPDATE_METADATA" = true ]; then
 	chown builder "$BUILDDIR/PKGBUILD"
 	su builder -c "cd $BUILDDIR && updpkgsums"
 	echo "::endgroup::"
+
+	echo "::group::Generating .SRCINFO"
+	su builder -c "cd $BUILDDIR && makepkg --printsrcinfo" >/tmp/.SRCINFO
+	install -o "$HOST_UID" -g "$HOST_GID" -m644 "$BUILDDIR/PKGBUILD" "$SRCDIR/PKGBUILD"
+	install -o "$HOST_UID" -g "$HOST_GID" -m644 /tmp/.SRCINFO "$SRCDIR/.SRCINFO"
+	echo "::endgroup::"
 fi
 
 echo "::group::Building package"
@@ -99,11 +105,3 @@ echo "::endgroup::"
 echo "::group::Installing built package"
 "${SUDO[@]}" pacman -U --noconfirm "$main_pkg"
 echo "::endgroup::"
-
-if [ "$UPDATE_METADATA" = true ]; then
-	echo "::group::Writing regenerated metadata back to the workspace"
-	su builder -c "cd $BUILDDIR && makepkg --printsrcinfo" >"$BUILDDIR/.SRCINFO"
-	install -o "$HOST_UID" -g "$HOST_GID" -m644 "$BUILDDIR/PKGBUILD" "$SRCDIR/PKGBUILD"
-	install -o "$HOST_UID" -g "$HOST_GID" -m644 "$BUILDDIR/.SRCINFO" "$SRCDIR/.SRCINFO"
-	echo "::endgroup::"
-fi
