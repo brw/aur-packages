@@ -44,6 +44,9 @@ jobs:
       fail-fast: false
       matrix:
         package: ${{ fromJSON(needs.find-packages.outputs.packages) }}
+        arch:
+          - x86_64
+          - aarch64
         include:
           - arch: x86_64
             runner: ubuntu-latest
@@ -69,8 +72,34 @@ jobs:
           update_metadata: ${{ matrix.update_metadata }}
           base_sha: ${{ github.event.pull_request.base.sha }}
 
-      - name: Commit regenerated metadata
+      - name: Upload regenerated metadata
         if: matrix.update_metadata
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ matrix.package }}
+          path: ${{ matrix.package }}
+          include-hidden-files: true
+          if-no-files-found: error
+
+  commit:
+    name: Commit regenerated metadata
+    runs-on: ubuntu-latest
+    needs: validate
+    concurrency:
+      group: commit-metadata-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Download regenerated metadata
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+
+      - name: Commit regenerated metadata
         uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
         with:
+          branch: ${{ github.head_ref }}
           file_pattern: '*/PKGBUILD */.SRCINFO'
