@@ -16,6 +16,10 @@ inputs:
     description: "Run updpkgsums, reset pkgrel on a version bump, regenerate .SRCINFO and commit."
     required: false
     default: "false"
+  build:
+    description: "Build, verify and install the package."
+    required: false
+    default: "true"
   base_sha:
     description: "SHA of the commit before this change, to check which packages to build. Use github.event.before for pushes and github.event.pull_request.base.sha for pull requests."
     required: false
@@ -30,6 +34,7 @@ runs:
         PKGNAME: ${{ inputs.pkgname }}
         IMAGE: ${{ inputs.image }}
         UPDATE_METADATA: ${{ inputs.update_metadata }}
+        BUILD: ${{ inputs.build }}
         BASE_SHA: ${{ inputs.base_sha }}
       run: |
         set -euo pipefail
@@ -44,6 +49,7 @@ runs:
           --volume "${{ github.action_path }}:/action:ro" \
           --env "PKGNAME=$PKGNAME" \
           --env "UPDATE_METADATA=$UPDATE_METADATA" \
+          --env "BUILD=$BUILD" \
           --env "BASE_SHA=$BASE_SHA" \
           --env "HOST_UID=$(id -u)" \
           --env "HOST_GID=$(id -g)" \

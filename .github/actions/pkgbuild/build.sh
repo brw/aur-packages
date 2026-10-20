@@ -3,6 +3,7 @@ set -euo pipefail
 
 PKGNAME=${PKGNAME:?PKGNAME is required}
 UPDATE_METADATA=${UPDATE_METADATA:-false}
+BUILD=${BUILD:-true}
 HOST_UID=${HOST_UID:-0}
 HOST_GID=${HOST_GID:-0}
 WORKSPACE=${WORKSPACE:-/workspace}
@@ -79,6 +80,11 @@ if [ "$UPDATE_METADATA" = true ]; then
 	install -o "$HOST_UID" -g "$HOST_GID" -m644 "$BUILDDIR/PKGBUILD" "$SRCDIR/PKGBUILD"
 	install -o "$HOST_UID" -g "$HOST_GID" -m644 /tmp/.SRCINFO "$SRCDIR/.SRCINFO"
 	echo "::endgroup::"
+fi
+
+if [ "$BUILD" != true ]; then
+	echo "skipping build"
+	exit 0
 fi
 
 echo "::group::Building package"
