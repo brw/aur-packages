@@ -10,13 +10,12 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": [
-        "/(^|/)PKGBUILD$/"
-      ],
+      "managerFilePatterns": ["/(^|/)PKGBUILD$/"],
       "matchStrings": [
         "pkgver=(?<currentValue>.*) # renovate: datasource=(?<datasource>.*) depName=(?<depName>.*)"
       ],
       "extractVersionTemplate": "^v?(?<version>.*)$"
     }
-  ]
+  ],
+  "gitIgnoredAuthors": ["41898282+github-actions[bot]@users.noreply.github.com"]
 }
