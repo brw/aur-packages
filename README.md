@@ -1,12 +1,13 @@
-# PKGBUILDs for the [Arch User Repository (AUR)][1]
+# packages i maintain for the [AUR][1]
 
-this repo is based on the one by [JamieMagee][2], which automates package upgrades using [Renovate][3].
+trying to automate package updates as much as possible (but i'll always check new versions manually before publishing them as well).
+
+nix fixes this maybe soon:tm:
 
 ## license
 
-all code in this repository is licensed under [the MIT license][4]. see the `license` property in each `PKGBUILD` for the license under which each package is distributed.
+all code in this repository is licensed under the [MIT license][3]. see the `license` property in each `PKGBUILD` for the license under which each package is distributed.
 
-[1]: https://aur.archlinux.org
+[1]: https://aur.archlinux.org/packages?SeB=m&K=bas
 [2]: https://github.com/JamieMagee/aur-packages
-[3]: github.com/apps/renovate
-[4]: https://opensource.org/licenses/MIT
+[3]: https://opensource.org/licenses/MIT
